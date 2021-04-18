@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, overload, Any, Type, Dict, Tuple, Union, Optional
+from typing import TypeVar, Generic, overload, Any, Type, Dict, Tuple, Union, Optional, Callable
 
 from .errors import ValidationError, ErrorCode
 from .utils import Undefined
@@ -14,7 +14,7 @@ class Field(Generic[T]):
     _propname: str
     _label = ''
     _desc = ''
-    _default: Union[Undefined, T] = _UNDEFINED
+    _default: Union[Undefined, T, Callable[[], T]] = _UNDEFINED
 
     expected_exceptions_for_convert: Tuple[Type[Exception], ...] =\
         (ValueError, TypeError)
@@ -26,6 +26,8 @@ class Field(Generic[T]):
                     value=value,
                     default_message='This field is required',
                     code=ErrorCode.required)
+            elif callable(self._default):
+                return self._default()
             else:
                 return self._default
 
@@ -48,7 +50,7 @@ class Field(Generic[T]):
     def validate(self, value: T):
         raise NotImplementedError()
 
-    def default(self: FieldT, value: T) -> FieldT:
+    def default(self: FieldT, value: Union[T, Callable[[], T]]) -> FieldT:
         self._default = value
         return self
 
