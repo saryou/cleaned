@@ -5,6 +5,7 @@ from .utils import Undefined
 
 
 T = TypeVar('T')
+VT = TypeVar('VT')
 FieldT = TypeVar('FieldT', bound='Field')
 CleanedT = TypeVar('CleanedT', bound='Cleaned')
 _UNDEFINED = Undefined()
@@ -117,26 +118,26 @@ class Field(Generic[T]):
         return OptionalField(self, omissible=omissible)
 
 
-class OptionalField(Field[Optional[T]]):
-    field: Field[T]
+class OptionalField(Field[Optional[VT]]):
+    field: Field[VT]
 
     def __init__(self,
-                 field: Field[T],
+                 field: Field[VT],
                  omissible: bool = True):
         self.field = field
         self.omissible = omissible
 
-    def clean(self, value: Any = _UNDEFINED) -> Optional[T]:
+    def clean(self, value: Any = _UNDEFINED) -> Optional[VT]:
         if value is _UNDEFINED and self.omissible:
             return None
         return super().clean(value)
 
-    def convert(self, value: Any) -> Optional[T]:
+    def convert(self, value: Any) -> Optional[VT]:
         if value is None:
             return None
         return self.field.convert(value)
 
-    def validate(self, value: Optional[T]):
+    def validate(self, value: Optional[VT]):
         if value is not None:
             self.field.validate(value)
 

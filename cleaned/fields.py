@@ -7,7 +7,7 @@ from .base import Field, Cleaned
 from .errors import ValidationError, ErrorCode
 
 
-T = TypeVar('T')
+VT = TypeVar('VT')
 Num = Union[int, float]
 HashableT = TypeVar('HashableT')
 CleanedT = TypeVar('CleanedT', bound=Cleaned)
@@ -204,9 +204,9 @@ class DatetimeField(Field[datetime]):
         _validate(value, self, 'comparable', 'one_of')
 
 
-class ListField(Field[List[T]]):
+class ListField(Field[List[VT]]):
     def __init__(self,
-                 value: Field[T],
+                 value: Field[VT],
                  *,
                  length: Optional[int] = None,
                  min_length: Optional[int] = None,
@@ -217,12 +217,12 @@ class ListField(Field[List[T]]):
         self.min_length = min_length
         self.max_length = max_length
 
-    def convert(self, value: Any) -> List[T]:
+    def convert(self, value: Any) -> List[VT]:
         if isinstance(value, str):
             value = json.loads(value)
         value = list(value)
 
-        result: List[T] = []
+        result: List[VT] = []
         errors: Dict[str, ValidationError] = {}
         for index, item in enumerate(value):
             try:
@@ -233,7 +233,7 @@ class ListField(Field[List[T]]):
             raise ValidationError(errors)
         return result
 
-    def validate(self, value: List[T]):
+    def validate(self, value: List[VT]):
         _validate(value, self, 'length')
 
 
@@ -270,13 +270,13 @@ class SetField(Field[Set[HashableT]]):
         _validate(value, self, 'length')
 
 
-class DictField(Field[Dict[HashableT, T]]):
+class DictField(Field[Dict[HashableT, VT]]):
     key: Field[HashableT]
-    value: Field[T]
+    value: Field[VT]
 
     @overload
-    def __init__(self: 'DictField[str, T]',
-                 value: Field[T],
+    def __init__(self: 'DictField[str, VT]',
+                 value: Field[VT],
                  *,
                  length: Optional[int] = ...,
                  min_length: Optional[int] = ...,
@@ -285,7 +285,7 @@ class DictField(Field[Dict[HashableT, T]]):
 
     @overload
     def __init__(self,
-                 value: Field[T],
+                 value: Field[VT],
                  key: Field[HashableT],
                  *,
                  length: Optional[int] = ...,
@@ -307,12 +307,12 @@ class DictField(Field[Dict[HashableT, T]]):
         self.min_length = min_length
         self.max_length = max_length
 
-    def convert(self, value: Any) -> Dict[HashableT, T]:
+    def convert(self, value: Any) -> Dict[HashableT, VT]:
         if isinstance(value, str):
             value = json.loads(value)
         value = dict(value)
 
-        result: Dict[HashableT, T] = {}
+        result: Dict[HashableT, VT] = {}
         errors: Dict[str, ValidationError] = {}
         for k, v in value.items():
             try:
@@ -332,7 +332,7 @@ class DictField(Field[Dict[HashableT, T]]):
             raise ValidationError(errors)
         return result
 
-    def validate(self, value: Dict[HashableT, T]):
+    def validate(self, value: Dict[HashableT, VT]):
         _validate(value, self, 'length')
 
 
