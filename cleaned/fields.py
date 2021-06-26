@@ -1,6 +1,7 @@
 import json
 import re
 from datetime import time, date, datetime
+from enum import Enum
 from typing import Any, Type, Union, List, Dict, Set, Optional, TypeVar, Sized, Literal, overload, Callable, cast
 
 from .base import Field, Cleaned
@@ -11,6 +12,7 @@ VT = TypeVar('VT')
 Num = Union[int, float]
 HashableT = TypeVar('HashableT')
 CleanedT = TypeVar('CleanedT', bound=Cleaned)
+EnumT = TypeVar('EnumT', bound=Enum)
 
 
 class StrField(Field[str]):
@@ -357,6 +359,31 @@ class NestedField(Field[CleanedT]):
         return _type(**dict(value))
 
     def validate(self, value: CleanedT):
+        pass
+
+
+class EnumField(Field[EnumT]):
+    def __init__(self,
+                 enum: Union[Type[EnumT], Callable[[], Type[EnumT]]]):
+        super().__init__()
+        if isinstance(enum, type) and issubclass(enum, Enum):
+            self._server = cast(Callable[[], Type[EnumT]], lambda: enum)
+        else:
+            self._server = cast(Callable[[], Type[EnumT]], enum)
+
+    def convert(self, value: Any) -> EnumT:
+        _type = self._server()
+
+        if isinstance(value, _type):
+            return value
+        if isinstance(value, str):
+            try:
+                return _type[value]
+            except KeyError:
+                pass
+        return _type(value)
+
+    def validate(self, value: EnumT):
         pass
 
 
