@@ -114,23 +114,15 @@ class Field(Generic[T]):
                                code: str):
         raise ValidationError(default_message, code)
 
-    def opt(self: 'Field[T]', omissible: bool = True) -> 'OptionalField[T]':
-        return OptionalField(self, omissible=omissible)
+    def opt(self: 'Field[T]') -> 'OptionalField[T]':
+        return OptionalField(self)
 
 
 class OptionalField(Field[Optional[VT]]):
     field: Field[VT]
 
-    def __init__(self,
-                 field: Field[VT],
-                 omissible: bool = True):
+    def __init__(self, field: Field[VT]):
         self.field = field
-        self.omissible = omissible
-
-    def clean(self, value: Any = _UNDEFINED) -> Optional[VT]:
-        if value is _UNDEFINED and self.omissible:
-            return None
-        return super().clean(value)
 
     def convert(self, value: Any) -> Optional[VT]:
         if value is None:
