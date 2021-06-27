@@ -1,7 +1,7 @@
 from .errors import ErrorCode, ValidationError  # noqa
 from .utils import singleton, Undefined # noqa
 from .base import Field, OptionalField, Cleaned  # noqa
-from .fields import StrField, BoolField, IntField, FloatField, TimeField, DateField, DatetimeField, ListField, SetField, DictField, NestedField, EnumField
+from .fields import StrField, BoolField, IntField, FloatField, TimeField, DateField, DatetimeField, EitherField, ListField, SetField, DictField, NestedField, EnumField
 
 
 Str = StrField
@@ -11,6 +11,7 @@ Float = FloatField
 Time = TimeField
 Date = DateField
 Datetime = DatetimeField
+Either = EitherField
 List = ListField
 Set = SetField
 Dict = DictField

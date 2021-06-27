@@ -20,7 +20,7 @@ class Field(Generic[T]):
     expected_exceptions_for_convert: Tuple[Type[Exception], ...] =\
         (ValueError, TypeError)
 
-    def clean(self, value: Any = _UNDEFINED) -> T:
+    def clean(self, value: Any) -> T:
         if value is _UNDEFINED:
             if isinstance(self._default, Undefined):
                 self.raise_required_error(
@@ -106,7 +106,7 @@ class Field(Generic[T]):
                                default_message: str,
                                code: str,
                                exception: Exception):
-        raise ValidationError(default_message, code)
+        raise ValidationError(default_message, code) from exception
 
     def raise_validation_error(self,
                                value: T,

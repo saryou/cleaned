@@ -1,7 +1,7 @@
-from datetime import date
+from datetime import date, time
 from unittest import TestCase
 
-from cleaned.fields import StrField, IntField, DateField, DictField
+from cleaned.fields import StrField, IntField, BoolField, EitherField, TimeField, DateField, DictField
 from cleaned.errors import ValidationError, ErrorCode
 
 
@@ -25,6 +25,21 @@ class StrFieldTests(TestCase):
         blankable2.clean('')
         with self.assertRaises(ValidationError) as ctx:
             blankable2.clean('aaa')
+
+
+class EitherFieldTests(TestCase):
+    def test_spec(self):
+        dt_or_t = EitherField(DateField(), TimeField())
+        self.assertEqual(dt_or_t.clean('2000-01-01'), date(2000, 1, 1))
+        self.assertEqual(dt_or_t.clean('10:00:00'), time(10, 0, 0))
+        with self.assertRaises(ValidationError):
+            dt_or_t.clean('000000')
+
+        i_or_b = EitherField(IntField(), BoolField())
+        # t1 is priority
+        self.assertEqual(i_or_b.clean(True), 1)
+        self.assertEqual(i_or_b.clean('a'), True)
+        self.assertEqual(i_or_b.clean(''), False)
 
 
 class DictFieldTests(TestCase):

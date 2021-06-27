@@ -8,6 +8,8 @@ from .base import Field, Cleaned
 from .errors import ValidationError, ErrorCode
 
 
+T1 = TypeVar('T1')
+T2 = TypeVar('T2')
 VT = TypeVar('VT')
 Num = Union[int, float]
 HashableT = TypeVar('HashableT')
@@ -204,6 +206,33 @@ class DatetimeField(Field[datetime]):
 
     def validate(self, value: datetime):
         _validate(value, self, 'comparable', 'one_of')
+
+
+class EitherField(Field[Union[T1, T2]]):
+    def __init__(self,
+                 t1: Field[T1],
+                 t2: Field[T2]):
+        super().__init__()
+        self.t1 = t1
+        self.t2 = t2
+
+    def convert(self, value: Any) -> Union[T1, T2]:
+        try:
+            return self.t1.clean(value)
+        except Exception:
+            pass
+
+        try:
+            return self.t2.clean(value)
+        except Exception:
+            pass
+
+        raise ValueError(f'Either {self.t1.__class__.__name__} '
+                         f'and {self.t2.__class__.__name__} '
+                         f'can not handle `{value}`.')
+
+    def validate(self, value: Union[T1, T2]):
+        pass
 
 
 class ListField(Field[List[VT]]):
