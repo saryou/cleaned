@@ -1,4 +1,5 @@
-from typing import NamedTuple, overload, Optional, Dict, List, Iterable
+from dataclasses import dataclass
+from typing import overload, Optional, Dict, List, Iterable
 
 
 class ErrorCode:
@@ -16,7 +17,8 @@ class ErrorCode:
 
 
 class ValidationError(Exception):
-    class Item(NamedTuple):
+    @dataclass
+    class Item:
         message: str
         code: str
 
