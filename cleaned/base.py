@@ -56,6 +56,10 @@ class Field(Generic[T]):
         return self
 
     @property
+    def has_default(self) -> bool:
+        return self._default is not _UNDEFINED
+
+    @property
     def label(self) -> str:
         return self._label
 
