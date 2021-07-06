@@ -2,7 +2,7 @@ import json
 import re
 from datetime import time, date, datetime
 from enum import Enum
-from typing import Any, Type, Union, List, Dict, Set, Optional, TypeVar, Sized, Literal, overload, Callable, cast
+from typing import Any, Type, Union, List, Dict, Set, Optional, TypeVar, Sized, overload, Callable, cast
 
 from .base import Field, Cleaned
 from .errors import ValidationError, ErrorCode
@@ -66,7 +66,7 @@ class StrField(Field[str]):
                     value=value,
                     default_message='This field can not be blank.',
                     code=ErrorCode.blank)
-        _validate(value, self, 'length', 'one_of')
+        _validate(value, self, _LENGTH, _ONE_OF)
 
 
 class BoolField(Field[bool]):
@@ -99,7 +99,7 @@ class IntField(Field[int]):
         return int(value)
 
     def validate(self, value: int):
-        _validate(value, self, 'comparable', 'one_of')
+        _validate(value, self, _COMPARABLE, _ONE_OF)
 
 
 class FloatField(Field[float]):
@@ -121,7 +121,7 @@ class FloatField(Field[float]):
         return float(value)
 
     def validate(self, value: float):
-        _validate(value, self, 'comparable', 'one_of')
+        _validate(value, self, _COMPARABLE, _ONE_OF)
 
 
 class TimeField(Field[time]):
@@ -149,7 +149,7 @@ class TimeField(Field[time]):
         return time.fromisoformat(value)
 
     def validate(self, value: time):
-        _validate(value, self, 'comparable', 'one_of')
+        _validate(value, self, _COMPARABLE, _ONE_OF)
 
 
 class DateField(Field[date]):
@@ -177,7 +177,7 @@ class DateField(Field[date]):
         return datetime.fromisoformat(value).date()
 
     def validate(self, value: date):
-        _validate(value, self, 'comparable', 'one_of')
+        _validate(value, self, _COMPARABLE, _ONE_OF)
 
 
 class DatetimeField(Field[datetime]):
@@ -205,7 +205,7 @@ class DatetimeField(Field[datetime]):
         return datetime.fromisoformat(value)
 
     def validate(self, value: datetime):
-        _validate(value, self, 'comparable', 'one_of')
+        _validate(value, self, _COMPARABLE, _ONE_OF)
 
 
 class EitherField(Field[Union[T1, T2]]):
@@ -265,7 +265,7 @@ class ListField(Field[List[VT]]):
         return result
 
     def validate(self, value: List[VT]):
-        _validate(value, self, 'length')
+        _validate(value, self, _LENGTH)
 
 
 class SetField(Field[Set[HashableT]]):
@@ -298,7 +298,7 @@ class SetField(Field[Set[HashableT]]):
         return result
 
     def validate(self, value: Set[HashableT]):
-        _validate(value, self, 'length')
+        _validate(value, self, _LENGTH)
 
 
 class DictField(Field[Dict[HashableT, VT]]):
@@ -364,7 +364,7 @@ class DictField(Field[Dict[HashableT, VT]]):
         return result
 
     def validate(self, value: Dict[HashableT, VT]):
-        _validate(value, self, 'length')
+        _validate(value, self, _LENGTH)
 
 
 class NestedField(Field[CleanedT]):
@@ -483,14 +483,17 @@ def _validate_one_of(
             code=ErrorCode.one_of)
 
 
+_COMPARABLE = 'comparable'
+_LENGTH = 'length'
+_ONE_OF = 'one_of'
+
+
 def _validate(
         value: Any,
         field: Any,
-        *methods: Union[Literal['comparable'],
-                        Literal['length'],
-                        Literal['one_of']]):
+        *methods: str):
     for m in methods:
-        if m == 'comparable':
+        if m == _COMPARABLE:
             _validate_comparable(
                 value=value,
                 field=field,
@@ -498,14 +501,14 @@ def _validate(
                 lte=field.lte,
                 gt=field.gt,
                 gte=field.gte)
-        elif m == 'length':
+        elif m == _LENGTH:
             _validate_length(
                 value=value,
                 field=field,
                 length=field.length,
                 min_length=field.min_length,
                 max_length=field.max_length)
-        elif m == 'one_of':
+        elif m == _ONE_OF:
             _validate_one_of(
                 value=value,
                 field=field,
