@@ -28,7 +28,7 @@ class ValidationError(Exception):
     @overload
     def __init__(self,
                  message: str,
-                 code: str):
+                 code: Optional[str] = ...):
         ...
 
     @overload
