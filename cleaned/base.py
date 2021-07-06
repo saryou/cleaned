@@ -119,7 +119,13 @@ class Field(Generic[T]):
         raise ValidationError(default_message, code)
 
     def opt(self: 'Field[T]') -> 'OptionalField[T]':
-        return OptionalField(self)
+        opt = OptionalField(self)
+        opt.describe(
+            label=self.label,
+            desc=self.desc)
+        if not isinstance(self._default, Undefined):
+            opt.default(self._default)
+        return opt
 
 
 class OptionalField(Field[Optional[VT]]):
