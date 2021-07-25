@@ -21,7 +21,7 @@ class StrFieldTests(TestCase):
         self.assertIn(ErrorCode.blank, ctx.exception.to_flat_codes())
 
         # skip validations for empty value
-        blankable2 = StrField(blank=True, min_length=2)
+        blankable2 = StrField(blank=True, max_length=2)
         blankable2.clean('')
         with self.assertRaises(ValidationError) as ctx:
             blankable2.clean('aaa')

@@ -458,17 +458,17 @@ def _validate_length(
             default_message='The length of the value '
             f'must be equal to {length}.',
             code=ErrorCode.length)
-    if min_length is not None and len(value) > min_length:
+    if min_length is not None and len(value) < min_length:
         field.raise_validation_error(
             value=value,
             default_message='The length of the value '
-            f'must be less than or equal to {min_length}.',
+            f'must be longer than or equal to {min_length}.',
             code=ErrorCode.min_length)
-    if max_length is not None and len(value) < max_length:
+    if max_length is not None and len(value) > max_length:
         field.raise_validation_error(
             value=value,
             default_message='The length of the value '
-            f'must be greater than or equal to {max_length}.',
+            f'must be shorter than or equal to {max_length}.',
             code=ErrorCode.max_length)
 
 
