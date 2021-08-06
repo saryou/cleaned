@@ -157,7 +157,7 @@ class CleanedMeta:
 
 
 class CleanedBuilder(type):
-    def __new__(mcs, name: str, bases: Tuple, fields: Dict[str, Any]):
+    def __new__(cls, name: str, bases: Tuple, fields: Dict[str, Any]):
         cleaned_fields: Dict[str, Field] = dict()
         for base in bases:
             base_meta = getattr(base, '_meta', None)
@@ -173,9 +173,7 @@ class CleanedBuilder(type):
                 cleaned_fields[key] = value
 
         fields['_meta'] = CleanedMeta(cleaned_fields)
-        cls = type.__new__(mcs, name, bases, fields)
-
-        return cls
+        return type.__new__(cls, name, bases, fields)
 
 
 class Cleaned(metaclass=CleanedBuilder):
