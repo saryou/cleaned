@@ -21,12 +21,15 @@ class StrField(Field[str]):
     blank_pattern = re.compile(r'^\s*$')
     linebreak_pattern = re.compile(r'(\r\n|\r|\n)')
     linebreak_replacement = ' '
+    default_multiline = False
+    default_strip = True
 
     def __init__(self,
                  *,
                  blank: bool,
-                 multiline: bool = False,
-                 strip: bool = True,
+                 multiline: Optional[bool] = None,
+                 strip: Optional[bool] = None,
+                 pattern: Optional[str] = None,
                  length: Optional[int] = None,
                  min_length: Optional[int] = None,
                  max_length: Optional[int] = None,
@@ -34,6 +37,8 @@ class StrField(Field[str]):
         super().__init__()
         self.is_blankable = blank
         self.strip = strip
+        self.pattern = re.compile(pattern) if pattern else None
+        self.raw_pattern = pattern or ''
         self.multiline = multiline
         self.length = length
         self.min_length = min_length
@@ -48,9 +53,11 @@ class StrField(Field[str]):
         else:
             value = str(value)
 
-        if self.strip:
+        if (self.default_strip if self.strip is None else self.strip):
             value = value.strip()
-        if not self.multiline:
+
+        if not (self.default_multiline
+                if self.multiline is None else self.multiline):
             value = self.linebreak_pattern.sub(
                 self.linebreak_replacement, value)
 
@@ -66,6 +73,13 @@ class StrField(Field[str]):
                     value=value,
                     default_message='This field can not be blank.',
                     code=ErrorCode.blank)
+
+        if self.pattern and not self.pattern.match(value):
+            self.raise_validation_error(
+                value=value,
+                default_message=f'The value must match: {self.raw_pattern}',
+                code=ErrorCode.pattern)
+
         _validate(value, self, _LENGTH, _ONE_OF)
 
 

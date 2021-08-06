@@ -6,6 +6,7 @@ class ErrorCode:
     required = 'required'
     conversion = 'conversion'
     blank = 'blank'
+    pattern = 'pattern'
     lt = 'lt'
     lte = 'lte'
     gt = 'gt'
