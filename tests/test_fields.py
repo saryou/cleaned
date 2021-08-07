@@ -3,7 +3,8 @@ from datetime import date, time
 from enum import Enum
 from unittest import TestCase
 
-from cleaned.fields import StrField, IntField, BoolField, EitherField, TimeField, DateField, SetField, DictField, EnumField
+from cleaned.base import Cleaned
+from cleaned.fields import StrField, IntField, BoolField, EitherField, TimeField, DateField, SetField, DictField, EnumField, NestedField
 from cleaned.errors import ValidationError, ErrorCode
 
 
@@ -115,3 +116,27 @@ class EnumFieldTests(TestCase):
 
         with self.assertRaises(ValidationError):
             field.clean('1')
+
+
+class NestedFieldTests(TestCase):
+    def test_specs(self):
+        class Nested(Cleaned):
+            a = IntField()
+
+        field = NestedField(Nested)
+
+        nested = Nested(a=1)
+
+        # json
+        self.assertEqual(field.clean('{"a": "1"}'), nested)
+        # dict
+        self.assertEqual(field.clean({'a': '1'}), nested)
+        # cleaned
+        self.assertEqual(field.clean(Nested(a=1)), nested)
+
+        with self.assertRaises(ValidationError) as ctx:
+            field.clean({'a': 'a'})
+
+        self.assertEqual(len(ctx.exception.items), 0)
+        self.assertEqual(len(ctx.exception.nested), 1)
+        self.assertIn('a', ctx.exception.nested)
