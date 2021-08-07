@@ -1,7 +1,9 @@
+import re
 from datetime import date, time
+from enum import Enum
 from unittest import TestCase
 
-from cleaned.fields import StrField, IntField, BoolField, EitherField, TimeField, DateField, DictField
+from cleaned.fields import StrField, IntField, BoolField, EitherField, TimeField, DateField, SetField, DictField, EnumField
 from cleaned.errors import ValidationError, ErrorCode
 
 
@@ -26,6 +28,14 @@ class StrFieldTests(TestCase):
         with self.assertRaises(ValidationError) as ctx:
             blankable2.clean('aaa')
 
+        pattern = r'^\d+$'
+        regex_field = StrField(blank=False, pattern=pattern)
+        regex_field.clean('5')
+        with self.assertRaises(ValidationError) as ctx:
+            regex_field.clean('a5')
+        self.assertEqual(regex_field.raw_pattern, pattern)
+        self.assertEqual(regex_field.pattern, re.compile(pattern))
+
 
 class EitherFieldTests(TestCase):
     def test_spec(self):
@@ -40,6 +50,19 @@ class EitherFieldTests(TestCase):
         self.assertEqual(i_or_b.clean(True), 1)
         self.assertEqual(i_or_b.clean('a'), True)
         self.assertEqual(i_or_b.clean(''), False)
+
+
+class SetFieldTests(TestCase):
+    def test_spec(self):
+        field = SetField(IntField())
+
+        self.assertEqual(field.clean('["1", "2", "2", "3"]'), {1, 2, 3})
+        self.assertEqual(field.clean([1, 2, 3, 3]), {1, 2, 3})
+
+        with self.assertRaises(ValidationError) as ctx:
+            field.clean(['a', 'b', 'c', 'c'])
+        self.assertEqual(len(ctx.exception.items), 4)
+        self.assertEqual(len(ctx.exception.nested), 0)
 
 
 class DictFieldTests(TestCase):
@@ -63,3 +86,32 @@ class DictFieldTests(TestCase):
         self.assertEqual(
             field.clean({'1': '2000-01-01', '2': '1999-12-31'}),
             {1: date(2000, 1, 1), 2: date(1999, 12, 31)})
+
+        with self.assertRaises(ValidationError) as ctx:
+            field.clean({'a': 'b'})
+        self.assertEqual(len(ctx.exception.items), 0)
+        self.assertEqual(len(ctx.exception.nested), 2)
+        # key error
+        self.assertIn('a:key', ctx.exception.nested)
+        # value error
+        self.assertIn('a', ctx.exception.nested)
+
+
+class EnumFieldTests(TestCase):
+    def test_specs(self):
+        class Result(Enum):
+            ok = 1
+            ng = 0
+
+        field = EnumField(Result)
+
+        self.assertEqual(field.clean(Result.ok), Result.ok)
+        self.assertEqual(field.clean(1), Result.ok)
+        self.assertEqual(field.clean('ok'), Result.ok)
+
+        self.assertEqual(field.clean(Result.ng), Result.ng)
+        self.assertEqual(field.clean(0), Result.ng)
+        self.assertEqual(field.clean('ng'), Result.ng)
+
+        with self.assertRaises(ValidationError):
+            field.clean('1')
