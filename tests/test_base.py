@@ -106,3 +106,6 @@ class CleanedTests(TestCase):
             clean_b.assert_called_once_with(Undefined())
 
         self.assertEqual(C(a=1, b=2).to_dict(), dict(a=1, b=2))
+
+        self.assertEqual(C(a=1, b=1), C(a=1, b=1))
+        self.assertNotEqual(C(a=1, b=1), C(a=1, b=2))

@@ -202,3 +202,8 @@ class Cleaned(metaclass=CleanedBuilder):
 
     def to_dict(self) -> Dict[str, Any]:
         return dict(self._data)
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Cleaned):
+            return False
+        return self._data == other._data
