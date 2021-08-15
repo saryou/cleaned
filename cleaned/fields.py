@@ -308,7 +308,7 @@ class SetField(Field[Set[HashableT]]):
             except ValidationError as e:
                 error_items.extend(e.items)
         if error_items:
-            raise ValidationError(error_items)
+            raise ValidationError(list(error_items))
         return result
 
     def validate(self, value: Set[HashableT]):
