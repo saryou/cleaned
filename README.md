@@ -72,6 +72,7 @@ class Examples(cl.Cleaned):
     d = cl.Nested(NestedExample)
     e = cl.Enum(EnumExample)
     f = cl.List(cl.Nested(NestedExample))
+    g = cl.List(cl.Nested(lambda: Examples))
 
 
 ex = Examples()
@@ -93,4 +94,7 @@ reveal_type(ex.e)
 
 reveal_type(ex.f)
 # Revealed type is 'builtins.list*[Examples.NestedExample*]'
+
+reveal_type(ex.g)
+# Revealed type is 'builtins.list*[hoge.Examples*]'
 ```
