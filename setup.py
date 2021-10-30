@@ -7,7 +7,7 @@ with open("cleaned/version.py", "r", encoding="utf-8") as fh:
     version = re.match("VERSION = '(.*)'", fh.read()).groups()[0]
 
 setuptools.setup(
-    name="cleaned",
+    name="cleand",
     version=version,
     author="Ryosuke Sasaki",
     author_email="saryou.ssk@gmail.com",
