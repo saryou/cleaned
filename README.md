@@ -1,6 +1,6 @@
 # cleaned
 
-pypi: https://pypi.org/project/?????
+pypi: https://pypi.org/project/clnd/
 
 ## Overview
 
