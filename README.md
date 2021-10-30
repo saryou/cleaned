@@ -2,6 +2,8 @@
 
 pypi: https://pypi.org/project/cleand/
 
+(pypi's project name is not clean**e**d because it wasn't available then)
+
 ## Overview
 
 `cleaned` is a declarative data validator.
