@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import overload, Optional, Dict, List, Sequence, Mapping, Iterable, Tuple, Union, cast
+from typing import overload, Optional, Dict, List, Sequence, Mapping, Iterable, Union
 
 
 class ErrorCode:
@@ -105,5 +105,5 @@ def _to_items(items: ValidationErrorItemTypes) -> List[ValidationError.Item]:
         return [
             _i
             for i in items
-            for _i in _to_items(i) 
+            for _i in _to_items(i)
         ]

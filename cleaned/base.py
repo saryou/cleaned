@@ -1,4 +1,3 @@
-from functools import cache
 from typing import TypeVar, Generic, overload, Any, Type, Dict, Tuple, Union,\
     Optional, Callable, List, Set, Iterable
 
@@ -310,9 +309,9 @@ class Cleaned(metaclass=CleanedBuilder):
         if unnamed_errors or errors:
             items: List[ValidationError.Item] = []
             if unnamed_errors:
-                for e in unnamed_errors:
-                    items.extend(e.items)
-                    errors.update(e.nested)
+                for err in unnamed_errors:
+                    items.extend(err.items)
+                    errors.update(err.nested)
             raise ValidationError(items, errors)
 
         self._data = data
