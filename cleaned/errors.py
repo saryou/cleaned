@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import overload, Optional, Dict, List, Mapping, Iterable, Tuple, Union, cast
+from typing import overload, Optional, Dict, List, Sequence, Mapping, Iterable, Union
 
 
 class ErrorCode:
@@ -19,13 +19,12 @@ class ErrorCode:
 
 ValidationErrorItemType = Union[
     str,
-    Tuple[str, Optional[str]],
     'ValidationError.Item',
 ]
 
 ValidationErrorItemTypes = Union[
     ValidationErrorItemType,
-    List[ValidationErrorItemType],
+    Sequence[ValidationErrorItemType],
 ]
 
 ValidationErrorNestedType = Mapping[
@@ -98,16 +97,13 @@ def _to_nested(data: ValidationErrorNestedType) -> Dict[str, ValidationError]:
 
 
 def _to_items(items: ValidationErrorItemTypes) -> List[ValidationError.Item]:
-    if isinstance(items, list):
-        return [_to_item(cast(ValidationErrorItemType, i)) for i in items]
+    if isinstance(items, str):
+        return [ValidationError.Item(items)]
+    elif isinstance(items, ValidationError.Item):
+        return [items]
     else:
-        return [_to_item(items)]
-
-
-def _to_item(item: ValidationErrorItemType) -> ValidationError.Item:
-    if isinstance(item, str):
-        return ValidationError.Item(item)
-    elif isinstance(item, tuple):
-        return ValidationError.Item(item[0], item[1])
-    else:
-        return item
+        return [
+            _i
+            for i in items
+            for _i in _to_items(i)
+        ]

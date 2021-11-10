@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from cleaned.base import Cleaned, OptionalField
+from cleaned.base import Cleaned, OptionalField, cleaned_property, constraint, ConstraintAccess
 from cleaned.fields import IntField
 from cleaned.errors import ValidationError
 from cleaned.utils import Undefined
@@ -109,3 +109,87 @@ class CleanedTests(TestCase):
 
         self.assertEqual(C(a=1, b=1), C(a=1, b=1))
         self.assertNotEqual(C(a=1, b=1), C(a=1, b=2))
+
+    def test_cleaned_properties(self):
+        class C1(Cleaned):
+            value = IntField()
+            max = IntField()
+
+            @value.cleaned_property(max)
+            def twice_as_value(self) -> int:
+                if self.value * 2 > self.max:
+                    raise self.Error('must be value * 2 <= max')
+                return self.value * 2
+
+        c = C1(value=1, max=3)
+        self.assertEqual(c.twice_as_value, 2)
+        self.assertEqual(c.to_dict(), dict(value=1, max=3, twice_as_value=2))
+
+        with self.assertRaises(ValidationError) as ctx:
+            C1(value=1, max=1)
+        self.assertIn('value', ctx.exception.nested)
+
+        class C2(Cleaned):
+            value = IntField()
+            max = IntField()
+
+            @cleaned_property(value, max)
+            def twice_as_value(self) -> int:
+                if self.value * 2 > self.max:
+                    raise self.Error('must be value * 2 <= max')
+                return self.value * 2
+
+        with self.assertRaises(ValidationError) as ctx:
+            C2(value=1, max=1)
+        self.assertEqual(len(ctx.exception.items), 1)
+        self.assertFalse(ctx.exception.nested)
+
+        class C3(Cleaned):
+            value = IntField()
+            max = IntField()
+
+            @cleaned_property(value)
+            def twice_as_value(self) -> int:
+                # max is not present in depends_on
+                if self.value * 2 > self.max:
+                    raise self.Error('must be value * 2 <= max')
+                return self.value * 2
+
+        with self.assertRaises(AssertionError) as ctx:
+            C3(value=1, max=3)
+
+    def test_constraints(self):
+        class C1(Cleaned):
+            a = IntField()
+            b = IntField()
+
+            @a.constraint(b)
+            def a_must_lt_b(self):
+                if self.a < self.b:
+                    return
+                raise self.Error('a < b is not satisfied')
+
+        c = C1(a=1, b=3)
+        self.assertEqual(c.to_dict(), dict(a=1, b=3))
+
+        with self.assertRaises(ConstraintAccess):
+            c.a_must_lt_b
+
+        with self.assertRaises(ValidationError) as ctx:
+            C1(a=1, b=1)
+        self.assertIn('a', ctx.exception.nested)
+
+        class C2(Cleaned):
+            a = IntField()
+            b = IntField()
+
+            @constraint(a, b)
+            def a_must_lt_b(self):
+                if self.a < self.b:
+                    return
+                raise self.Error('a < b is not satisfied')
+
+        with self.assertRaises(ValidationError) as ctx:
+            C2(a=1, b=1)
+        self.assertEqual(len(ctx.exception.items), 1)
+        self.assertFalse(ctx.exception.nested)

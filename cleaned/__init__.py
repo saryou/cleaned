@@ -1,6 +1,6 @@
 from .errors import ErrorCode, ValidationError  # noqa
 from .utils import singleton, Undefined # noqa
-from .base import Field, OptionalField, Cleaned  # noqa
+from .base import Field, OptionalField, Cleaned, cleaned_property, constraint  # noqa
 from .fields import StrField, BoolField, IntField, FloatField, TimeField, DateField, DatetimeField, EitherField, ListField, SetField, DictField, NestedField, EnumField
 from .version import VERSION  # noqa
 
