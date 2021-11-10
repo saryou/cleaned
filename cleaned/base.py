@@ -34,6 +34,9 @@ class Dependable(Generic[T]):
         except KeyError as e:
             raise DirtyFieldAccess(self._propname) from e
 
+    def __set__(self, instance, val):
+        raise AttributeError(f'cannot assign to field `{self._propname}`')
+
     def __set_name__(self, owner, name):
         self._propname = name
 
@@ -111,11 +114,6 @@ class Field(Dependable[T]):
         if desc is not None:
             self._desc = desc
         return self
-
-    def __set__(self, instance, val):
-        if instance is None:
-            return
-        instance._data[self._propname] = self.clean(val)
 
     def raise_required_error(self,
                              value: Any,
