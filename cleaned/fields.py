@@ -45,13 +45,13 @@ class StrField(Field[str]):
         self.max_length = max_length
         self.one_of = one_of
 
-    def convert(self, value: Any) -> str:
+    def value_to_str(self, value: Any) -> str:
         if isinstance(value, str):
-            pass
-        elif isinstance(value, bytes):
-            value = value.decode('utf-8')
-        else:
-            value = str(value)
+            return value
+        raise TypeError()
+
+    def convert(self, value: Any) -> str:
+        value = self.value_to_str(value)
 
         if (self.default_strip if self.strip is None else self.strip):
             value = value.strip()
