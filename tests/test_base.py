@@ -158,6 +158,33 @@ class CleanedTests(TestCase):
         with self.assertRaises(AssertionError) as ctx:
             C3(value=1, max=3)
 
+        class C4(Cleaned):
+            value = IntField()
+            max = IntField()
+            min = IntField()
+
+            @value.cleaned_property(max, min)
+            def twice_as_value(self) -> int:
+                if self.value * 2 > self.max:
+                    raise self.Error('must be value * 2 <= max')
+                if self.value * 2 < self.min:
+                    raise self.Error('must be value * 2 >= min')
+                return self.value * 2
+
+        with self.assertRaises(ValidationError) as ctx:
+            C4(value=1, max=1)
+        # cleaned_property was not evaluated because min,
+        # which is a dependency, was not satisfied.
+        self.assertNotIn('value', ctx.exception.nested)
+        self.assertNotIn('max', ctx.exception.nested)
+        self.assertIn('min', ctx.exception.nested)
+
+        with self.assertRaises(ValidationError) as ctx:
+            C4(value=1, max=1, min=1)
+        self.assertIn('value', ctx.exception.nested)
+        self.assertNotIn('max', ctx.exception.nested)
+        self.assertNotIn('min', ctx.exception.nested)
+
     def test_constraints(self):
         class C1(Cleaned):
             a = IntField()
