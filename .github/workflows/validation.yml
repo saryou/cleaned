@@ -32,6 +32,9 @@ jobs:
     - name: Lint with mypy
       run: |
         mypy cleaned
+    - name: Lint with pyright
+      run: |
+        pyright cleaned
     - name: Test with unittest
       run: |
         python -m unittest
