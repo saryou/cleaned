@@ -144,15 +144,15 @@ class Field(Dependable[T]):
         return opt
 
     def cleaned_property(self, *depends_on: Dependable) -> Callable[
-            [Callable[['Cleaned'], T]], 'CleanedProperty[T]']:
-        def func(clean: Callable[[Cleaned], T]) -> CleanedProperty[T]:
+            [Callable[[CleanedT], T]], 'CleanedProperty[T]']:  # pyright: ignore [reportInvalidTypeVarUse]
+        def func(clean: Callable[[CleanedT], T]) -> CleanedProperty[T]:
             return CleanedProperty(clean, [self, *depends_on], self)
 
         return func
 
     def constraint(self, *depends_on: Dependable) -> Callable[
-            [Callable[['Cleaned'], None]], 'Constraint']:
-        def func(clean: Callable[[Cleaned], None]) -> Constraint:
+            [Callable[[CleanedT], None]], 'Constraint']:  # pyright: ignore [reportInvalidTypeVarUse]
+        def func(clean: Callable[[CleanedT], None]) -> Constraint:
             return Constraint(clean, [self, *depends_on], self)
 
         return func
@@ -330,16 +330,16 @@ class Cleaned(metaclass=CleanedBuilder):
 
 
 def cleaned_property(*depends_on: Dependable) -> Callable[
-        [Callable[['Cleaned'], T]], 'CleanedProperty[T]']:
-    def func(clean: Callable[[Cleaned], T]) -> CleanedProperty[T]:
+        [Callable[[CleanedT], T]], 'CleanedProperty[T]']:  # pyright: ignore [reportInvalidTypeVarUse]
+    def func(clean: Callable[[CleanedT], T]) -> CleanedProperty[T]:
         return CleanedProperty(clean, list(depends_on))
 
     return func
 
 
 def constraint(*depends_on: Dependable) -> Callable[
-        [Callable[['Cleaned'], None]], 'Constraint']:
-    def func(clean: Callable[[Cleaned], None]) -> Constraint:
+        [Callable[[CleanedT], None]], 'Constraint']:  # pyright: ignore [reportInvalidTypeVarUse]
+    def func(clean: Callable[[CleanedT], None]) -> Constraint:
         return Constraint(clean, list(depends_on))
 
     return func
