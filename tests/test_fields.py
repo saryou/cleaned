@@ -4,7 +4,7 @@ from enum import Enum
 from unittest import TestCase
 
 from cleaned.base import Cleaned
-from cleaned.fields import StrField, IntField, BoolField, EitherField, TimeField, DateField, SetField, DictField, EnumField, NestedField
+from cleaned.fields import StrField, IntField, BoolField, EitherField, TimeField, DateField, SetField, DictField, EnumField, NestedField, TagField, TaggedUnionField
 from cleaned.errors import ValidationError, ErrorCode
 
 
@@ -36,6 +36,100 @@ class StrFieldTests(TestCase):
             regex_field.clean('a5')
         self.assertEqual(regex_field.raw_pattern, pattern)
         self.assertEqual(regex_field.pattern, re.compile(pattern))
+
+
+class TagFieldTests(TestCase):
+    def test_spec(self):
+        a = TagField('a')
+        self.assertEqual(a.clean('a'), 'a')
+        one_or_two = TagField('1', '2')
+        self.assertEqual(one_or_two.clean('1'), '1')
+        self.assertEqual(one_or_two.clean('2'), '2')
+
+        with self.assertRaises(ValidationError):
+            one_or_two.clean(1)
+        with self.assertRaises(ValidationError):
+            one_or_two.clean(2)
+
+
+class TaggedUnionFieldTests(TestCase):
+    def test_spec(self):
+        class A(Cleaned):
+            tag = TagField('a')
+            one = IntField(lte=1)
+            two = IntField(lte=2)
+
+        class AA(A):
+            pass
+
+        class B(Cleaned):
+            tag = TagField('b')
+            one = IntField(lte=1)
+
+        class C(Cleaned):
+            tag = TagField('c')
+            two = IntField(lte=2)
+
+        class D(Cleaned):
+            tag = TagField('d')
+
+        class DE(Cleaned):
+            tag = TagField('d', 'e')
+            three = IntField(lte=3)
+
+        u = TaggedUnionField('tag', A, B, C, DE)
+
+        u_a = u.clean(dict(tag='a', one=1, two=2))
+        self.assertIsInstance(u_a, A)
+        assert isinstance(u_a, A)
+        self.assertEqual(u_a.one, 1)
+        self.assertEqual(u_a.two, 2)
+
+        with self.assertRaises(ValidationError) as ctx:
+            u.clean(dict(tag='a', one=2, two=2))
+        self.assertIn('one', ctx.exception.nested)
+        self.assertNotIn('two', ctx.exception.nested)
+
+        with self.assertRaises(ValidationError) as ctx:
+            u.clean(dict(tag='a'))
+        self.assertIn('one', ctx.exception.nested)
+        self.assertIn('two', ctx.exception.nested)
+
+        # two does not exists in B
+        u_b = u.clean(dict(tag='b', one=1, two=3))
+        self.assertIsInstance(u_b, B)
+        assert isinstance(u_b, B)
+        self.assertEqual(u_b.one, 1)
+
+        # one does not exists in C
+        u_c = u.clean(dict(tag='c', one=3, two=2))
+        self.assertIsInstance(u_c, C)
+        assert isinstance(u_c, C)
+        self.assertEqual(u_c.two, 2)
+
+        u_de = u.clean(dict(tag='d', three=3))
+        self.assertIsInstance(u_de, DE)
+        assert isinstance(u_de, DE)
+        self.assertEqual(u_de.three, 3)
+
+        u_de = u.clean(dict(tag='e', three=2))
+        self.assertIsInstance(u_de, DE)
+        assert isinstance(u_de, DE)
+        self.assertEqual(u_de.three, 2)
+
+        with self.assertRaises(ValidationError) as ctx:
+            u.clean(dict(tag='f'))
+        self.assertEqual(len(ctx.exception.items), 1)
+        self.assertEqual(len(ctx.exception.nested), 0)
+
+        # same type member will be skipped
+        self.assertEqual(TaggedUnionField('tag', A, A, B).members, {A, B})
+
+        # all members must have unique tag names
+        with self.assertRaises(AssertionError):
+            TaggedUnionField('tag', D, DE)
+        with self.assertRaises(AssertionError):
+            TaggedUnionField('tag', A, AA)
 
 
 class EitherFieldTests(TestCase):
