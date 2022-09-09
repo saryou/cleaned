@@ -25,5 +25,5 @@ setuptools.setup(
     ],
     packages=["cleaned"],
     package_dir={"cleaned": "cleaned"},
-    python_requires=">=3.7",
+    python_requires=">=3.8",
 )
