@@ -16,18 +16,6 @@ Num = Union[int, float]
 HashableT = TypeVar('HashableT')
 CleanedT = TypeVar('CleanedT', bound=Cleaned)
 EnumT = TypeVar('EnumT', bound=Enum)
-StrT = TypeVar('StrT', bound=str)
-
-C0 = TypeVar('C0', bound=Cleaned)
-C1 = TypeVar('C1', bound=Cleaned)
-C2 = TypeVar('C2', bound=Cleaned)
-C3 = TypeVar('C3', bound=Cleaned)
-C4 = TypeVar('C4', bound=Cleaned)
-C5 = TypeVar('C5', bound=Cleaned)
-C6 = TypeVar('C6', bound=Cleaned)
-C7 = TypeVar('C7', bound=Cleaned)
-C8 = TypeVar('C8', bound=Cleaned)
-C9 = TypeVar('C9', bound=Cleaned)
 
 
 class StrField(Field[str]):
