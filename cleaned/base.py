@@ -1,5 +1,5 @@
 from typing import TypeVar, Generic, overload, Any, Type, Dict, Tuple, Union,\
-    Optional, Callable, List, Set, Iterable
+    Optional, Callable, List, Set, Iterable, cast
 
 from .errors import ValidationError, ErrorCode
 from .utils import Undefined
@@ -343,3 +343,167 @@ def constraint(*depends_on: Dependable) -> Callable[
         return Constraint(clean, list(depends_on))
 
     return func
+
+
+class TagField(Field[str]):
+    def __init__(self, *tags: str):
+        super().__init__()
+        self.tags = tags
+
+    def convert(self, value: Any) -> str:
+        for tag in self.tags:
+            if tag == value:
+                return tag
+        raise TypeError()
+
+    def validate(self, value: str):
+        pass
+
+
+C0 = TypeVar('C0', bound=Cleaned)
+C1 = TypeVar('C1', bound=Cleaned)
+C2 = TypeVar('C2', bound=Cleaned)
+C3 = TypeVar('C3', bound=Cleaned)
+C4 = TypeVar('C4', bound=Cleaned)
+C5 = TypeVar('C5', bound=Cleaned)
+C6 = TypeVar('C6', bound=Cleaned)
+C7 = TypeVar('C7', bound=Cleaned)
+C8 = TypeVar('C8', bound=Cleaned)
+C9 = TypeVar('C9', bound=Cleaned)
+
+
+class TaggedUnion(Generic[T]):
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 /):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 /):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 /):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 /):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 /):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 /):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 /):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 /):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 /):
+        ...
+
+    def __init__(self,
+                 tag_field_name: str,
+                 c0: Type[Cleaned],
+                 c1: Type[Cleaned],
+                 *cleaneds: Type[Cleaned]):
+        self.tag_field_name = tag_field_name
+        self.members = {c0, c1, *cleaneds}
+
+        _mapping: Dict[str, Type[Cleaned]] = dict()
+        for cl in self.members:
+            field = cl._meta.fields.get(tag_field_name)
+            if not isinstance(field, TagField):
+                continue
+
+            for tag in field.tags:
+                assert tag not in _mapping,\
+                    f'A tag `{tag}` is duplicated. '\
+                    'All members of a tagged union must have unique tag.'
+                _mapping[tag] = cl
+        self.mapping = _mapping
+
+    def __call__(self, **kwargs) -> T:
+        tag = kwargs.get(self.tag_field_name)
+        if (cl := self.mapping.get(cast(str, tag))):
+            return cast(T, cl(**kwargs))
+        raise TypeError('The type is indeterminable from given values.')

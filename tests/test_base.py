@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import patch
 
-from cleaned.base import Cleaned, OptionalField, cleaned_property, constraint, ConstraintAccess
+from cleaned.base import Cleaned, OptionalField, cleaned_property, constraint, ConstraintAccess, TagField, TaggedUnion
 from cleaned.fields import IntField
 from cleaned.errors import ValidationError
 from cleaned.utils import Undefined
@@ -220,3 +220,95 @@ class CleanedTests(TestCase):
             C2(a=1, b=1)
         self.assertEqual(len(ctx.exception.items), 1)
         self.assertFalse(ctx.exception.nested)
+
+
+class TagFieldTests(TestCase):
+    def test_spec(self):
+        a = TagField('a')
+        self.assertEqual(a.clean('a'), 'a')
+        one_or_two = TagField('1', '2')
+        self.assertEqual(one_or_two.clean('1'), '1')
+        self.assertEqual(one_or_two.clean('2'), '2')
+
+        with self.assertRaises(ValidationError):
+            one_or_two.clean(1)
+        with self.assertRaises(ValidationError):
+            one_or_two.clean(2)
+
+
+class TaggedUnionTests(TestCase):
+    def test_spec(self):
+        class A(Cleaned):
+            tag = TagField('a')
+            one = IntField(lte=1)
+            two = IntField(lte=2)
+
+        class AA(A):
+            pass
+
+        class B(Cleaned):
+            tag = TagField('b')
+            one = IntField(lte=1)
+
+        class C(Cleaned):
+            tag = TagField('c')
+            two = IntField(lte=2)
+
+        class D(Cleaned):
+            tag = TagField('d')
+
+        class DE(Cleaned):
+            tag = TagField('d', 'e')
+            three = IntField(lte=3)
+
+        u = TaggedUnion('tag', A, B, C, DE)
+
+        u_a = u(tag='a', one=1, two=2)
+        self.assertIsInstance(u_a, A)
+        assert isinstance(u_a, A)
+        self.assertEqual(u_a.one, 1)
+        self.assertEqual(u_a.two, 2)
+
+        with self.assertRaises(ValidationError) as ctx:
+            u(tag='a', one=2, two=2)
+        self.assertIn('one', ctx.exception.nested)
+        self.assertNotIn('two', ctx.exception.nested)
+
+        with self.assertRaises(ValidationError) as ctx:
+            u(tag='a')
+        self.assertIn('one', ctx.exception.nested)
+        self.assertIn('two', ctx.exception.nested)
+
+        # two does not exists in B
+        u_b = u(tag='b', one=1, two=3)
+        self.assertIsInstance(u_b, B)
+        assert isinstance(u_b, B)
+        self.assertEqual(u_b.one, 1)
+
+        # one does not exists in C
+        u_c = u(tag='c', one=3, two=2)
+        self.assertIsInstance(u_c, C)
+        assert isinstance(u_c, C)
+        self.assertEqual(u_c.two, 2)
+
+        u_de = u(tag='d', three=3)
+        self.assertIsInstance(u_de, DE)
+        assert isinstance(u_de, DE)
+        self.assertEqual(u_de.three, 3)
+
+        u_de = u(tag='e', three=2)
+        self.assertIsInstance(u_de, DE)
+        assert isinstance(u_de, DE)
+        self.assertEqual(u_de.three, 2)
+
+        with self.assertRaises(TypeError) as ctx:
+            u(tag='f')
+
+        # same type member will be skipped
+        self.assertEqual(TaggedUnion('tag', A, A, B).members, {A, B})
+
+        # all members must have unique tag names
+        with self.assertRaises(AssertionError):
+            TaggedUnion('tag', D, DE)
+        with self.assertRaises(AssertionError):
+            TaggedUnion('tag', A, AA)

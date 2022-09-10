@@ -4,7 +4,7 @@ from datetime import time, date, datetime
 from enum import Enum
 from typing import Any, Type, Union, List, Dict, Set, Optional, TypeVar, Sized, overload, Callable, cast
 
-from .base import Field, Cleaned
+from .base import Field, Cleaned, TaggedUnion
 from .errors import ValidationError, ErrorCode
 
 
@@ -235,168 +235,6 @@ class DatetimeField(Field[datetime]):
         _validate(value, self, _COMPARABLE, _ONE_OF)
 
 
-class TagField(Field[str]):
-    def __init__(self, *tags: str):
-        super().__init__()
-        self.tags = tags
-
-    def convert(self, value: Any) -> str:
-        for tag in self.tags:
-            if tag == value:
-                return tag
-        raise TypeError()
-
-    def validate(self, value: str):
-        pass
-
-
-class TaggedUnionField(Field[T]):
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 /):
-        ...
-
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1, C2]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 c2: Type[C2],
-                 /):
-        ...
-
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1, C2, C3]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 c2: Type[C2],
-                 c3: Type[C3],
-                 /):
-        ...
-
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1, C2, C3, C4]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 c2: Type[C2],
-                 c3: Type[C3],
-                 c4: Type[C4],
-                 /):
-        ...
-
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1, C2, C3, C4, C5]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 c2: Type[C2],
-                 c3: Type[C3],
-                 c4: Type[C4],
-                 c5: Type[C5],
-                 /):
-        ...
-
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1, C2, C3, C4, C5, C6]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 c2: Type[C2],
-                 c3: Type[C3],
-                 c4: Type[C4],
-                 c5: Type[C5],
-                 c6: Type[C6],
-                 /):
-        ...
-
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1, C2, C3, C4, C5, C6, C7]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 c2: Type[C2],
-                 c3: Type[C3],
-                 c4: Type[C4],
-                 c5: Type[C5],
-                 c6: Type[C6],
-                 c7: Type[C7],
-                 /):
-        ...
-
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 c2: Type[C2],
-                 c3: Type[C3],
-                 c4: Type[C4],
-                 c5: Type[C5],
-                 c6: Type[C6],
-                 c7: Type[C7],
-                 c8: Type[C8],
-                 /):
-        ...
-
-    @overload
-    def __init__(self: 'TaggedUnionField[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9]]',
-                 tag_field: str,
-                 c0: Type[C0],
-                 c1: Type[C1],
-                 c2: Type[C2],
-                 c3: Type[C3],
-                 c4: Type[C4],
-                 c5: Type[C5],
-                 c6: Type[C6],
-                 c7: Type[C7],
-                 c8: Type[C8],
-                 c9: Type[C9],
-                 /):
-        ...
-
-    def __init__(self,
-                 tag_field: str,
-                 c0: Type[Cleaned],
-                 c1: Type[Cleaned],
-                 *cleaneds: Type[Cleaned]):
-        super().__init__()
-        self.tag_field = tag_field
-        self.members = {c0, c1, *cleaneds}
-
-        _mapping: Dict[str, Type[Cleaned]] = dict()
-        for cl in self.members:
-            field = cl._meta.fields.get(tag_field)
-            if not isinstance(field, TagField):
-                continue
-
-            for tag in field.tags:
-                assert tag not in _mapping,\
-                    f'A tag `{tag}` is duplicated. '\
-                    'All members of a tagged union must have unique tag.'
-                _mapping[tag] = cl
-        self.mapping = _mapping
-
-    def convert(self, value: Any) -> T:
-        if isinstance(value, str):
-            value = json.loads(value)
-        elif isinstance(value, Cleaned):
-            value = value._data
-
-        if isinstance(value, dict):
-            tag = value.get(self.tag_field)
-            if isinstance(tag, str) and (cl := self.mapping.get(tag)):
-                return cast(T, cl(**value))
-        raise TypeError()
-
-    def validate(self, value: T):
-        pass
-
-
 class EitherField(Field[Union[T1, T2]]):
     def __init__(self,
                  t1: Field[T1],
@@ -556,27 +394,41 @@ class DictField(Field[Dict[HashableT, VT]]):
         _validate(value, self, _LENGTH)
 
 
-class NestedField(Field[CleanedT]):
-    def __init__(self,
-                 cleaned: Union[Type[CleanedT], Callable[[], Type[CleanedT]]]):
-        super().__init__()
-        if isinstance(cleaned, type) and issubclass(cleaned, Cleaned):
-            self._server = cast(Callable[[], Type[CleanedT]], lambda: cleaned)
-        else:
-            self._server = cast(Callable[[], Type[CleanedT]], cleaned)
+class NestedField(Field[T]):
+    @overload
+    def __init__(self: 'NestedField[T]', nested: TaggedUnion[T]):
+        ...
 
-    def convert(self, value: Any) -> CleanedT:
+    @overload
+    def __init__(self: 'NestedField[CleanedT]', nested: Type[CleanedT]):
+        ...
+
+    @overload
+    def __init__(self: 'NestedField[CleanedT]', nested: Callable[[], Type[CleanedT]]):
+        ...
+
+    def __init__(self,
+                 nested: Union[
+                     TaggedUnion[T],
+                     Type[CleanedT],
+                     Callable[[], Type[CleanedT]],
+                 ]):
+        super().__init__()
+        if isinstance(nested, TaggedUnion):
+            self._server = cast(Callable[[], Callable[[], T]], lambda: nested)
+        elif isinstance(nested, type) and issubclass(nested, Cleaned):
+            self._server = cast(Callable[[], Callable[[], T]], lambda: nested)
+        else:
+            self._server = cast(Callable[[], Callable[[], T]], nested)
+
+    def convert(self, value: Any) -> T:
         if isinstance(value, str):
             value = json.loads(value)
+        elif isinstance(value, Cleaned):
+            value = value._data
+        return self._server()(**value)
 
-        _type = self._server()
-
-        if isinstance(value, Cleaned):
-            return _type(**value._data)
-
-        return _type(**dict(value))
-
-    def validate(self, value: CleanedT):
+    def validate(self, value: T):
         pass
 
 
