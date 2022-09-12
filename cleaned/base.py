@@ -486,7 +486,11 @@ class TaggedUnion(Generic[CleanedT]):
                  *cleaneds: Type[Cleaned]):
         self.tag_field_name = tag_field_name
 
-        self.members = cast(Set[Type[CleanedT]], set(cleaneds))
+        _members: List[Type[CleanedT]] = []
+        for cl in cleaneds:
+            if cl not in _members:
+                _members.append(cast(Type[CleanedT], cl))
+        self.members = tuple(_members)
 
         self.mapping: Dict[str, Type[CleanedT]] = dict()
         for cl in self.members:

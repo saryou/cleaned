@@ -308,7 +308,7 @@ class TaggedUnionTests(TestCase):
             u(tag='f')
 
         # same type member will be skipped
-        self.assertEqual(TaggedUnion('tag', A, A, B).members, {A, B})
+        self.assertEqual(TaggedUnion('tag', A, A, B).members, (A, B))
 
         # all members must have tag fields which have same field name
         with self.assertRaises(AssertionError):
