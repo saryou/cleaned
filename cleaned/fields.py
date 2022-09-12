@@ -16,18 +16,6 @@ Num = Union[int, float]
 HashableT = TypeVar('HashableT')
 CleanedT = TypeVar('CleanedT', bound=Cleaned)
 EnumT = TypeVar('EnumT', bound=Enum)
-StrT = TypeVar('StrT', bound=str)
-
-C0 = TypeVar('C0', bound=Cleaned)
-C1 = TypeVar('C1', bound=Cleaned)
-C2 = TypeVar('C2', bound=Cleaned)
-C3 = TypeVar('C3', bound=Cleaned)
-C4 = TypeVar('C4', bound=Cleaned)
-C5 = TypeVar('C5', bound=Cleaned)
-C6 = TypeVar('C6', bound=Cleaned)
-C7 = TypeVar('C7', bound=Cleaned)
-C8 = TypeVar('C8', bound=Cleaned)
-C9 = TypeVar('C9', bound=Cleaned)
 
 
 class StrField(Field[str]):
@@ -394,9 +382,9 @@ class DictField(Field[Dict[HashableT, VT]]):
         _validate(value, self, _LENGTH)
 
 
-class NestedField(Field[T]):
+class NestedField(Field[CleanedT]):
     @overload
-    def __init__(self: 'NestedField[T]', nested: TaggedUnion[T]):
+    def __init__(self: 'NestedField[CleanedT]', nested: TaggedUnion[CleanedT]):
         ...
 
     @overload
@@ -409,26 +397,26 @@ class NestedField(Field[T]):
 
     def __init__(self,
                  nested: Union[
-                     TaggedUnion[T],
+                     TaggedUnion[CleanedT],
                      Type[CleanedT],
                      Callable[[], Type[CleanedT]],
                  ]):
         super().__init__()
         if isinstance(nested, TaggedUnion):
-            self._server = cast(Callable[[], Callable[[], T]], lambda: nested)
+            self._server = lambda: cast(Callable[[], CleanedT], nested)
         elif isinstance(nested, type) and issubclass(nested, Cleaned):
-            self._server = cast(Callable[[], Callable[[], T]], lambda: nested)
+            self._server = lambda: cast(Callable[[], CleanedT], nested)
         else:
-            self._server = cast(Callable[[], Callable[[], T]], nested)
+            self._server = nested
 
-    def convert(self, value: Any) -> T:
+    def convert(self, value: Any) -> CleanedT:
         if isinstance(value, str):
             value = json.loads(value)
         elif isinstance(value, Cleaned):
             value = value._data
         return self._server()(**value)
 
-    def validate(self, value: T):
+    def validate(self, value: CleanedT):
         pass
 
 

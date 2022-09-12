@@ -261,6 +261,9 @@ class TaggedUnionTests(TestCase):
             tag = TagField('d', 'e')
             three = IntField(lte=3)
 
+        class Irrelevant(Cleaned):
+            other_tag_name = TagField('i')
+
         u = TaggedUnion('tag', A, B, C, DE)
 
         u_a = u(tag='a', one=1, two=2)
@@ -305,7 +308,11 @@ class TaggedUnionTests(TestCase):
             u(tag='f')
 
         # same type member will be skipped
-        self.assertEqual(TaggedUnion('tag', A, A, B).members, {A, B})
+        self.assertEqual(TaggedUnion('tag', A, A, B).members, (A, B))
+
+        # all members must have tag fields which have same field name
+        with self.assertRaises(AssertionError):
+            TaggedUnion('tag', A, Irrelevant)
 
         # all members must have unique tag names
         with self.assertRaises(AssertionError):

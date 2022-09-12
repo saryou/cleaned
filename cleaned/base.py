@@ -372,7 +372,7 @@ C8 = TypeVar('C8', bound=Cleaned)
 C9 = TypeVar('C9', bound=Cleaned)
 
 
-class TaggedUnion(Generic[T]):
+class TaggedUnion(Generic[CleanedT]):
     @overload
     def __init__(self: 'TaggedUnion[Union[C0, C1]]',
                  tag_field_name: str,
@@ -483,27 +483,30 @@ class TaggedUnion(Generic[T]):
 
     def __init__(self,
                  tag_field_name: str,
-                 c0: Type[Cleaned],
-                 c1: Type[Cleaned],
                  *cleaneds: Type[Cleaned]):
         self.tag_field_name = tag_field_name
-        self.members = {c0, c1, *cleaneds}
 
-        _mapping: Dict[str, Type[Cleaned]] = dict()
+        _members: List[Type[CleanedT]] = []
+        for cl in cleaneds:
+            if cl not in _members:
+                _members.append(cast(Type[CleanedT], cl))
+        self.members = tuple(_members)
+
+        self.mapping: Dict[str, Type[CleanedT]] = dict()
         for cl in self.members:
             field = cl._meta.fields.get(tag_field_name)
-            if not isinstance(field, TagField):
-                continue
+            assert isinstance(field, TagField),\
+                'All members must have discirinable tags that '\
+                f'fields are named `{tag_field_name}`.'
 
             for tag in field.tags:
-                assert tag not in _mapping,\
+                assert tag not in self.mapping,\
                     f'A tag `{tag}` is duplicated. '\
                     'All members of a tagged union must have unique tag.'
-                _mapping[tag] = cl
-        self.mapping = _mapping
+                self.mapping[tag] = cl
 
-    def __call__(self, **kwargs) -> T:
+    def __call__(self, **kwargs) -> CleanedT:
         tag = kwargs.get(self.tag_field_name)
         if (cl := self.mapping.get(cast(str, tag))):
-            return cast(T, cl(**kwargs))
+            return cl(**kwargs)
         raise TypeError('The type is indeterminable from given values.')
