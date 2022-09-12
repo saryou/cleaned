@@ -492,8 +492,9 @@ class TaggedUnion(Generic[T]):
         _mapping: Dict[str, Type[Cleaned]] = dict()
         for cl in self.members:
             field = cl._meta.fields.get(tag_field_name)
-            if not isinstance(field, TagField):
-                continue
+            assert isinstance(field, TagField),\
+                'All members must have discirinable tags that '\
+                f'fields are named `{tag_field_name}`.'
 
             for tag in field.tags:
                 assert tag not in _mapping,\
