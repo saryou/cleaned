@@ -382,9 +382,9 @@ class DictField(Field[Dict[HashableT, VT]]):
         _validate(value, self, _LENGTH)
 
 
-class NestedField(Field[T]):
+class NestedField(Field[CleanedT]):
     @overload
-    def __init__(self: 'NestedField[T]', nested: TaggedUnion[T]):
+    def __init__(self: 'NestedField[CleanedT]', nested: TaggedUnion[CleanedT]):
         ...
 
     @overload
@@ -397,26 +397,26 @@ class NestedField(Field[T]):
 
     def __init__(self,
                  nested: Union[
-                     TaggedUnion[T],
+                     TaggedUnion[CleanedT],
                      Type[CleanedT],
                      Callable[[], Type[CleanedT]],
                  ]):
         super().__init__()
         if isinstance(nested, TaggedUnion):
-            self._server = cast(Callable[[], Callable[[], T]], lambda: nested)
+            self._server = lambda: cast(Callable[[], CleanedT], nested)
         elif isinstance(nested, type) and issubclass(nested, Cleaned):
-            self._server = cast(Callable[[], Callable[[], T]], lambda: nested)
+            self._server = lambda: cast(Callable[[], CleanedT], nested)
         else:
-            self._server = cast(Callable[[], Callable[[], T]], nested)
+            self._server = nested
 
-    def convert(self, value: Any) -> T:
+    def convert(self, value: Any) -> CleanedT:
         if isinstance(value, str):
             value = json.loads(value)
         elif isinstance(value, Cleaned):
             value = value._data
         return self._server()(**value)
 
-    def validate(self, value: T):
+    def validate(self, value: CleanedT):
         pass
 
 
