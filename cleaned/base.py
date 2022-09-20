@@ -347,6 +347,9 @@ def constraint(*depends_on: Dependable) -> Callable[
 
 class TagField(Field[str]):
     def __init__(self, *tags: str):
+        assert tags
+        assert all(isinstance(tag, str) and tag for tag in tags)
+        assert len(tags) == len(set(tags))
         super().__init__()
         self.tags = tags
 

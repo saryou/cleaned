@@ -235,6 +235,28 @@ class TagFieldTests(TestCase):
         with self.assertRaises(ValidationError):
             one_or_two.clean(2)
 
+        # at least one tag is required
+        with self.assertRaises(AssertionError):
+            TagField()
+
+        # all tags must be str
+        with self.assertRaises(AssertionError):
+            TagField(1)  # type: ignore
+        with self.assertRaises(AssertionError):
+            TagField('1', 1)  # type: ignore
+
+        # all tags must not be empty
+        with self.assertRaises(AssertionError):
+            TagField('')
+        with self.assertRaises(AssertionError):
+            TagField('a', '')
+
+        # tags must be unique
+        with self.assertRaises(AssertionError):
+            TagField('a', 'a')
+        with self.assertRaises(AssertionError):
+            TagField('a', 'b', 'a')
+
 
 class TaggedUnionTests(TestCase):
     def test_spec(self):
