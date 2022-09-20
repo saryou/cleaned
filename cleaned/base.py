@@ -347,6 +347,9 @@ def constraint(*depends_on: Dependable) -> Callable[
 
 class TagField(Field[str]):
     def __init__(self, *tags: str):
+        assert tags
+        assert all(isinstance(tag, str) and tag for tag in tags)
+        assert len(tags) == len(set(tags))
         super().__init__()
         self.tags = tags
 
@@ -370,6 +373,16 @@ C6 = TypeVar('C6', bound=Cleaned)
 C7 = TypeVar('C7', bound=Cleaned)
 C8 = TypeVar('C8', bound=Cleaned)
 C9 = TypeVar('C9', bound=Cleaned)
+C10 = TypeVar('C10', bound=Cleaned)
+C11 = TypeVar('C11', bound=Cleaned)
+C12 = TypeVar('C12', bound=Cleaned)
+C13 = TypeVar('C13', bound=Cleaned)
+C14 = TypeVar('C14', bound=Cleaned)
+C15 = TypeVar('C15', bound=Cleaned)
+C16 = TypeVar('C16', bound=Cleaned)
+C17 = TypeVar('C17', bound=Cleaned)
+C18 = TypeVar('C18', bound=Cleaned)
+C19 = TypeVar('C19', bound=Cleaned)
 
 
 class TaggedUnion(Generic[CleanedT]):
@@ -378,7 +391,9 @@ class TaggedUnion(Generic[CleanedT]):
                  tag_field_name: str,
                  c0: Type[C0],
                  c1: Type[C1],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -387,7 +402,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c0: Type[C0],
                  c1: Type[C1],
                  c2: Type[C2],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -397,7 +414,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c1: Type[C1],
                  c2: Type[C2],
                  c3: Type[C3],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -408,7 +427,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c2: Type[C2],
                  c3: Type[C3],
                  c4: Type[C4],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -420,7 +441,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c3: Type[C3],
                  c4: Type[C4],
                  c5: Type[C5],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -433,7 +456,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c4: Type[C4],
                  c5: Type[C5],
                  c6: Type[C6],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -447,7 +472,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c5: Type[C5],
                  c6: Type[C6],
                  c7: Type[C7],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -462,7 +489,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c6: Type[C6],
                  c7: Type[C7],
                  c8: Type[C8],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -478,13 +507,252 @@ class TaggedUnion(Generic[CleanedT]):
                  c7: Type[C7],
                  c8: Type[C8],
                  c9: Type[C9],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 c12: Type[C12],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 c12: Type[C12],
+                 c13: Type[C13],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 c12: Type[C12],
+                 c13: Type[C13],
+                 c14: Type[C14],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 c12: Type[C12],
+                 c13: Type[C13],
+                 c14: Type[C14],
+                 c15: Type[C15],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 c12: Type[C12],
+                 c13: Type[C13],
+                 c14: Type[C14],
+                 c15: Type[C15],
+                 c16: Type[C16],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 c12: Type[C12],
+                 c13: Type[C13],
+                 c14: Type[C14],
+                 c15: Type[C15],
+                 c16: Type[C16],
+                 c17: Type[C17],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 c12: Type[C12],
+                 c13: Type[C13],
+                 c14: Type[C14],
+                 c15: Type[C15],
+                 c16: Type[C16],
+                 c17: Type[C17],
+                 c18: Type[C18],
+                 /,
+                 *,
+                 fallback: str = ...):
+        ...
+
+    @overload
+    def __init__(self: 'TaggedUnion[Union[C0, C1, C2, C3, C4, C5, C6, C7, C8, C9, C10, C11, C12, C13, C14, C15, C16, C17, C18, C19]]',
+                 tag_field_name: str,
+                 c0: Type[C0],
+                 c1: Type[C1],
+                 c2: Type[C2],
+                 c3: Type[C3],
+                 c4: Type[C4],
+                 c5: Type[C5],
+                 c6: Type[C6],
+                 c7: Type[C7],
+                 c8: Type[C8],
+                 c9: Type[C9],
+                 c10: Type[C10],
+                 c11: Type[C11],
+                 c12: Type[C12],
+                 c13: Type[C13],
+                 c14: Type[C14],
+                 c15: Type[C15],
+                 c16: Type[C16],
+                 c17: Type[C17],
+                 c18: Type[C18],
+                 c19: Type[C19],
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     def __init__(self,
                  tag_field_name: str,
-                 *cleaneds: Type[Cleaned]):
+                 *cleaneds: Type[Cleaned],
+                 fallback: str = ''):
         self.tag_field_name = tag_field_name
+        self.fallback = fallback
 
         _members: List[Type[CleanedT]] = []
         for cl in cleaneds:
@@ -505,8 +773,12 @@ class TaggedUnion(Generic[CleanedT]):
                     'All members of a tagged union must have unique tag.'
                 self.mapping[tag] = cl
 
+        assert not self.fallback or self.fallback in self.mapping,\
+            'fallback must be a tag which one of a member\'s'
+
     def __call__(self, **kwargs) -> CleanedT:
-        tag = kwargs.get(self.tag_field_name)
+        if (tag := kwargs.get(self.tag_field_name)) is None:
+            kwargs[self.tag_field_name] = (tag := self.fallback)
         if (cl := self.mapping.get(cast(str, tag))):
             return cl(**kwargs)
         raise TypeError('The type is indeterminable from given values.')

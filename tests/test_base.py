@@ -235,6 +235,28 @@ class TagFieldTests(TestCase):
         with self.assertRaises(ValidationError):
             one_or_two.clean(2)
 
+        # at least one tag is required
+        with self.assertRaises(AssertionError):
+            TagField()
+
+        # all tags must be str
+        with self.assertRaises(AssertionError):
+            TagField(1)  # type: ignore
+        with self.assertRaises(AssertionError):
+            TagField('1', 1)  # type: ignore
+
+        # all tags must not be empty
+        with self.assertRaises(AssertionError):
+            TagField('')
+        with self.assertRaises(AssertionError):
+            TagField('a', '')
+
+        # tags must be unique
+        with self.assertRaises(AssertionError):
+            TagField('a', 'a')
+        with self.assertRaises(AssertionError):
+            TagField('a', 'b', 'a')
+
 
 class TaggedUnionTests(TestCase):
     def test_spec(self):
@@ -306,6 +328,19 @@ class TaggedUnionTests(TestCase):
 
         with self.assertRaises(TypeError) as ctx:
             u(tag='f')
+
+        # fallback
+        u2 = TaggedUnion('tag', A, B, C, fallback='a')
+        # fallback only works when tag is None or unspecified
+        self.assertIsInstance(u2(one=1, two=2), A)
+        self.assertIsInstance(u2(tag=None, one=1, two=2), A)
+        with self.assertRaises(TypeError):
+            u2(tag='')
+        with self.assertRaises(TypeError):
+            u2(tag='_')
+        # invalid fallback
+        with self.assertRaises(AssertionError):
+            TaggedUnion('tag', A, B, fallback='c')
 
         # same type member will be skipped
         self.assertEqual(TaggedUnion('tag', A, A, B).members, (A, B))
