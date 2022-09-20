@@ -381,7 +381,9 @@ class TaggedUnion(Generic[CleanedT]):
                  tag_field_name: str,
                  c0: Type[C0],
                  c1: Type[C1],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -390,7 +392,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c0: Type[C0],
                  c1: Type[C1],
                  c2: Type[C2],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -400,7 +404,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c1: Type[C1],
                  c2: Type[C2],
                  c3: Type[C3],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -411,7 +417,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c2: Type[C2],
                  c3: Type[C3],
                  c4: Type[C4],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -423,7 +431,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c3: Type[C3],
                  c4: Type[C4],
                  c5: Type[C5],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -436,7 +446,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c4: Type[C4],
                  c5: Type[C5],
                  c6: Type[C6],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -450,7 +462,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c5: Type[C5],
                  c6: Type[C6],
                  c7: Type[C7],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -465,7 +479,9 @@ class TaggedUnion(Generic[CleanedT]):
                  c6: Type[C6],
                  c7: Type[C7],
                  c8: Type[C8],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     @overload
@@ -481,13 +497,17 @@ class TaggedUnion(Generic[CleanedT]):
                  c7: Type[C7],
                  c8: Type[C8],
                  c9: Type[C9],
-                 /):
+                 /,
+                 *,
+                 fallback: str = ...):
         ...
 
     def __init__(self,
                  tag_field_name: str,
-                 *cleaneds: Type[Cleaned]):
+                 *cleaneds: Type[Cleaned],
+                 fallback: str = ''):
         self.tag_field_name = tag_field_name
+        self.fallback = fallback
 
         _members: List[Type[CleanedT]] = []
         for cl in cleaneds:
@@ -508,8 +528,12 @@ class TaggedUnion(Generic[CleanedT]):
                     'All members of a tagged union must have unique tag.'
                 self.mapping[tag] = cl
 
+        assert not self.fallback or self.fallback in self.mapping,\
+            'fallback must be a tag which one of a member\'s'
+
     def __call__(self, **kwargs) -> CleanedT:
-        tag = kwargs.get(self.tag_field_name)
+        if (tag := kwargs.get(self.tag_field_name)) is None:
+            kwargs[self.tag_field_name] = (tag := self.fallback)
         if (cl := self.mapping.get(cast(str, tag))):
             return cl(**kwargs)
         raise TypeError('The type is indeterminable from given values.')

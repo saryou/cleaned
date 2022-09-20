@@ -329,6 +329,19 @@ class TaggedUnionTests(TestCase):
         with self.assertRaises(TypeError) as ctx:
             u(tag='f')
 
+        # fallback
+        u2 = TaggedUnion('tag', A, B, C, fallback='a')
+        # fallback only works when tag is None or unspecified
+        self.assertIsInstance(u2(one=1, two=2), A)
+        self.assertIsInstance(u2(tag=None, one=1, two=2), A)
+        with self.assertRaises(TypeError):
+            u2(tag='')
+        with self.assertRaises(TypeError):
+            u2(tag='_')
+        # invalid fallback
+        with self.assertRaises(AssertionError):
+            TaggedUnion('tag', A, B, fallback='c')
+
         # same type member will be skipped
         self.assertEqual(TaggedUnion('tag', A, A, B).members, (A, B))
 
