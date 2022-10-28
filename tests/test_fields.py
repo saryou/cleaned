@@ -44,7 +44,7 @@ class EitherFieldTests(TestCase):
         self.assertEqual(dt_or_t.clean('2000-01-01'), date(2000, 1, 1))
         self.assertEqual(dt_or_t.clean('10:00:00'), time(10, 0, 0))
         with self.assertRaises(ValidationError):
-            dt_or_t.clean('000000')
+            dt_or_t.clean('0000-00-00')
 
         i_or_b = EitherField(IntField(), BoolField())
         # t1 is priority
