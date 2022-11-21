@@ -23,7 +23,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    packages=["cleaned"],
+    packages=setuptools.find_packages(exclude=["tests"]),
     package_dir={"cleaned": "cleaned"},
     python_requires=">=3.8",
 )
