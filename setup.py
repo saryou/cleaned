@@ -25,5 +25,6 @@ setuptools.setup(
     ],
     packages=setuptools.find_packages(exclude=["tests"]),
     package_dir={"cleaned": "cleaned"},
+    package_data={"cleaned": ["py.typed"]},
     python_requires=">=3.8",
 )
