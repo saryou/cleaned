@@ -764,7 +764,7 @@ class TaggedUnion(Generic[CleanedT]):
         for cl in self.members:
             field = cl._meta.fields.get(tag_field_name)
             assert isinstance(field, TagField),\
-                'All members must have discirinable tags that '\
+                'All members must have discriminable tags that '\
                 f'fields are named `{tag_field_name}`.'
 
             for tag in field.tags:
