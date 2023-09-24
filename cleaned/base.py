@@ -365,10 +365,11 @@ class TagField(Field[str]):
 
 class TaggedUnion(Generic[CleanedT]):
     def __init__(self,
-                 tag_field_name: str,
                  *cleaneds: Type[CleanedT],
+                 tag_field_name: str = '',
                  fallback: str = ''):
-        self.tag_field_name = tag_field_name
+        self.tag_field_name = tag_field_name\
+            or self._detect_tag_field_name(*cleaneds)
         self.fallback = fallback
 
         _members: List[Type[CleanedT]] = []
@@ -379,10 +380,10 @@ class TaggedUnion(Generic[CleanedT]):
 
         self.mapping: Dict[str, Type[CleanedT]] = dict()
         for cl in self.members:
-            field = cl._meta.fields.get(tag_field_name)
+            field = cl._meta.fields.get(self.tag_field_name)
             assert isinstance(field, TagField),\
                 'All members must have discriminable tags that '\
-                f'fields are named `{tag_field_name}`.'
+                f'fields are named `{self.tag_field_name}`.'
 
             for tag in field.tags:
                 assert tag not in self.mapping,\
@@ -392,6 +393,22 @@ class TaggedUnion(Generic[CleanedT]):
 
         assert not self.fallback or self.fallback in self.mapping,\
             'fallback must be a tag which one of a member\'s'
+
+    @staticmethod
+    def _detect_tag_field_name(*cleaneds: Type[Cleaned]) -> str:
+        names: Union[Set[str], None] = None
+        for cl in cleaneds:
+            _names = {k for k, f in cl._meta.fields.items()
+                      if isinstance(f, TagField)}
+            if names is None:
+                names = _names
+            else:
+                names.intersection_update(_names)
+            if len(names) == 1:
+                return names.pop()
+        assert names, 'Can not detect tag_field_name'
+        assert len(names) != 1, 'Can not determine tag_field_name'
+        return names.pop()
 
     def __call__(self, **kwargs) -> CleanedT:
         if (tag := kwargs.get(self.tag_field_name)) is None:
