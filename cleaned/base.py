@@ -394,6 +394,18 @@ class TaggedUnion(Generic[CleanedT]):
         assert not self.fallback or self.fallback in self.mapping,\
             'fallback must be a tag which one of a member\'s'
 
+    @classmethod
+    def from_type(cls,
+                  cleaneds: Type[CleanedT],
+                  tag_field_name: str = '',
+                  fallback: str = '') -> 'TaggedUnion[CleanedT]':
+        args = (cleaneds,)\
+            if isinstance(cleaneds, type) and issubclass(cleaneds, Cleaned)\
+            else getattr(cleaneds, '__args__', None)
+        assert isinstance(args, tuple)
+        assert all(isinstance(r, type) and issubclass(r, Cleaned) for r in args)
+        return cls(*args, tag_field_name=tag_field_name, fallback=fallback)
+
     @staticmethod
     def _detect_tag_field_name(*cleaneds: Type[Cleaned]) -> str:
         names: Union[Set[str], None] = None
@@ -416,3 +428,11 @@ class TaggedUnion(Generic[CleanedT]):
         if (cl := self.mapping.get(cast(str, tag))):
             return cl(**kwargs)
         raise TypeError('The type is indeterminable from given values.')
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, TaggedUnion):
+            return False
+
+        return self.tag_field_name == other.tag_field_name\
+            and self.fallback == other.fallback\
+            and self.members == other.members

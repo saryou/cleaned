@@ -1,3 +1,4 @@
+from typing import Union
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -354,6 +355,10 @@ class TaggedUnionTests(TestCase):
             TaggedUnion(D, DE)
         with self.assertRaises(AssertionError):
             TaggedUnion(A, AA)
+
+        # from_type
+        self.assertEqual(u, TaggedUnion.from_type(Union[A, B, C, DE]))
+        self.assertNotEqual(u, TaggedUnion.from_type(Union[A, B, C]))
 
     def test__detect_tag_field_name(self):
         class A(Cleaned):
