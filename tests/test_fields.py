@@ -159,7 +159,7 @@ class NestedFieldTests(TestCase):
             tag = TagField('d', 'e')
             three = IntField(lte=3)
 
-        u = NestedField(TaggedUnion('tag', A, B, C, DE))
+        u = NestedField(TaggedUnion(A, B, C, DE))
 
         u_a = u.clean(dict(tag='a', one=1, two=2))
         self.assertIsInstance(u_a, A)

@@ -1,3 +1,4 @@
+from typing import Union
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -286,7 +287,7 @@ class TaggedUnionTests(TestCase):
         class Irrelevant(Cleaned):
             other_tag_name = TagField('i')
 
-        u = TaggedUnion('tag', A, B, C, DE)
+        u = TaggedUnion(A, B, C, DE)
 
         u_a = u(tag='a', one=1, two=2)
         self.assertIsInstance(u_a, A)
@@ -330,7 +331,7 @@ class TaggedUnionTests(TestCase):
             u(tag='f')
 
         # fallback
-        u2 = TaggedUnion('tag', A, B, C, fallback='a')
+        u2 = TaggedUnion(A, B, C, fallback='a')
         # fallback only works when tag is None or unspecified
         self.assertIsInstance(u2(one=1, two=2), A)
         self.assertIsInstance(u2(tag=None, one=1, two=2), A)
@@ -340,17 +341,52 @@ class TaggedUnionTests(TestCase):
             u2(tag='_')
         # invalid fallback
         with self.assertRaises(AssertionError):
-            TaggedUnion('tag', A, B, fallback='c')
+            TaggedUnion(A, B, fallback='c')
 
         # same type member will be skipped
-        self.assertEqual(TaggedUnion('tag', A, A, B).members, (A, B))
+        self.assertEqual(TaggedUnion(A, A, B).members, (A, B))
 
         # all members must have tag fields which have same field name
         with self.assertRaises(AssertionError):
-            TaggedUnion('tag', A, Irrelevant)
+            TaggedUnion(A, Irrelevant)
 
         # all members must have unique tag names
         with self.assertRaises(AssertionError):
-            TaggedUnion('tag', D, DE)
+            TaggedUnion(D, DE)
         with self.assertRaises(AssertionError):
-            TaggedUnion('tag', A, AA)
+            TaggedUnion(A, AA)
+
+        # from_type
+        self.assertEqual(u, TaggedUnion.from_type(Union[A, B, C, DE]))
+        self.assertNotEqual(u, TaggedUnion.from_type(Union[A, B, C]))
+
+    def test__detect_tag_field_name(self):
+        class A(Cleaned):
+            t0 = TagField('a')
+            t1 = TagField('a')
+            t2 = TagField('a')
+
+        class B(Cleaned):
+            t0 = TagField('b')
+            t2 = TagField('b')
+
+        class C(Cleaned):
+            t0 = TagField('c')
+            t1 = TagField('c')
+
+        class D(Cleaned):
+            t1 = TagField('d')
+            t2 = TagField('d')
+
+        self.assertEqual(TaggedUnion(A, B, C).tag_field_name, 't0')
+        self.assertEqual(TaggedUnion(A, B, D).tag_field_name, 't2')
+        self.assertEqual(TaggedUnion(A, C, D).tag_field_name, 't1')
+        self.assertEqual(TaggedUnion(B, C).tag_field_name, 't0')
+        self.assertEqual(TaggedUnion(B, D).tag_field_name, 't2')
+        self.assertEqual(TaggedUnion(C, D).tag_field_name, 't1')
+
+        with self.assertRaises(AssertionError):
+            TaggedUnion(A, B)
+            TaggedUnion(A, C)
+            TaggedUnion(A, D)
+            TaggedUnion(A, B, C, D)
