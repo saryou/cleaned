@@ -10,7 +10,5 @@ def singleton(cls):
 
 @singleton
 class Undefined(object):
-    """未定義であることを表現する"""
-
     def __bool__(self):
         return False
